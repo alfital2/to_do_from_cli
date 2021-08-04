@@ -4,10 +4,13 @@ Please install all the imported libraries.
 
 After installation :
 
-In order to run the file "todo" from the cli please make it executable by using:
-chmod +x todo.py .
+Please run the server with "python server".
 
-Then run ./todo [command] [args]
+then,
+ 
+Run "python todo.py" and test the functionality :-)
 
 In order to run test files, from the ROOT dir run:
 python -m  unittest -v test_app/test_app.py
+
+Please contact me if any issues occur or something isn't clear.
