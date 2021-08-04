@@ -19,11 +19,15 @@ NO_TASKS = "no tasks"
 SUCCESS = "success"
 TASK_NAME = "task_name"
 TASK_COMPLETED = "completed"
+TASK_ACTIVE = "active"
 TASK_ALREADY_IN_STATE = "task already in this state"
 TASK_CHANGE_STATE = "task state is now changed"
 TASK_DELETED = "task is now deleted"
 NO_COMPLETED_TASKS = "no completed tasks exist"
-
+UNKNOWN_COMMAND = "unknown command!"
+ERROR = "error"
+TABLE_OUTPUT = "out"
+DELETE_ERROR = "ERROR deleting task "
 
 # URLS
 URL = "http://localhost:8080"
@@ -38,10 +42,10 @@ GET_TASK_URL_COMMAND = URL + GET_TASK_ROUTE + "?task="
 ADD_TASK_URL = URL + ADD_TASK_ROUTE
 UPDATE_TASK_URL = URL + UPDATE_TASK_ROUTE
 GET_LIST_TASKS = URL + GET_LIST_ROUTE
+GET_LIST_TASKS_COMMAND = GET_LIST_TASKS+"?function="
 COMPLETE_TASK_URL = URL + COMPLETE_TASK_ROUTE
 CHANGE_TASK_STATE_URL = URL + CHANGE_TASK_STATE_ROUTE
 DELETE_TASK_URL = URL + DELETE_TASK_ROUTE
-
 
 # SERVER
 

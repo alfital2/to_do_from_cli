@@ -8,83 +8,32 @@ from constants import *
 
 # TO-DO add function to verify that the amount of arguments is valid for every function case
 
-def get_task_status(task):
-    res = requests.get(GET_TASK_URL_COMMAND + task)
-    return ast.literal_eval(res.text)
-
-
-def build_table_of_tasks(tasks_list, feature):
-    task_str = ""
-    for task in tasks_list:
-        completed = '+' if task[1] is True else '-'
-        spaces = " " * (SPACE_FACTOR - len(task[0]))
-        line = task[0] + spaces + completed + "\n"
-        task_str += line
-    return task_str
-
-
-def generate_task_table(tasks_list, feature):
-    msg = NO_TASKS
-    if feature == LIST_COMPLETED_TASKS:
-        tasks_list = filter(lambda x: x[1], tasks_list)
-        msg = NO_COMPLETED_TASKS
-    if len(tasks_list) == 0:
-        print(msg)
-    else:
-        tasks = build_table_of_tasks(tasks_list, feature)
-        print(tasks)
-
 
 if __name__ == '__main__':
 
     function = sys.argv[1]
-    print(function)
     if function == ADD_TASK:
         task_name = sys.argv[2]
-        res = get_task_status(task_name)
-        if res[TASK_STATUS] == TASK_NOT_FOUND:
-            # can add new task
-            r = requests.post(ADD_TASK_URL, data=task_name.encode('utf-8'))
-            print(TASK_ADDED)
-        else:
-            print(TASK_EXIST)
+        r = requests.post(ADD_TASK_URL, data=task_name.encode('utf-8'))
 
     elif function == UPDATE_TASK:
         old_task, updated_task = sys.argv[2], sys.argv[3]
-        old_task_status = get_task_status(old_task)
-        if old_task_status[TASK_STATUS] == TASK_FOUND:
-            new_task_status = get_task_status(updated_task)
-            if new_task_status[TASK_STATUS] == TASK_FOUND:
-                print(TASK_EXIST)
-            else:
-                # can now update
-                tasks_data = {OLD_TASK: old_task, UPDATED_TASK: updated_task}
-                r = requests.post(UPDATE_TASK_URL, data=json.dumps(tasks_data))
-                r = ast.literal_eval(r.text)[TASK_STATUS]
-                print(r)
-        else:
-            print(old_task_status[TASK_STATUS])
+        tasks_data = {OLD_TASK: old_task, UPDATED_TASK: updated_task}
+        requests.post(UPDATE_TASK_URL, data=json.dumps(tasks_data))
 
     elif function == LIST_TASKS or function == LIST_COMPLETED_TASKS:
-        res = requests.get(GET_LIST_TASKS)
-        list_of_tasks = res.json()["data"]
-        generate_task_table(list_of_tasks, function)
+        res = requests.get(GET_LIST_TASKS_COMMAND + function)
+        print(ast.literal_eval(res.text)[TABLE_OUTPUT])
 
     elif function == COMPLETE_TASK or function == UNDO_TASK:
         task_name = sys.argv[2]
-        res = get_task_status(task_name)
-        if res[TASK_STATUS] == TASK_NOT_FOUND:
-            print(TASK_NOT_FOUND)
-        else:
-            tasks_data = {TASK_NAME: task_name, TASK_STATUS: function}
-            r = requests.post(CHANGE_TASK_STATE_URL, data=json.dumps(tasks_data))
-            print(r.text)
+        tasks_data = {TASK_NAME: task_name, TASK_STATUS: function}
+        r = requests.post(CHANGE_TASK_STATE_URL, data=json.dumps(tasks_data))
 
     elif function == DELETE_TASK:
         task_name = sys.argv[2]
-        res = get_task_status(task_name)
-        if res[TASK_STATUS] == TASK_NOT_FOUND:
-            print(TASK_NOT_FOUND)
-        else:
-            r = requests.post(DELETE_TASK_URL, data=task_name.encode('utf-8'))
-            print(r.text)
+        res = requests.post(DELETE_TASK_URL, data=task_name.encode('utf-8'))
+        res = ast.literal_eval(res.text)
+        if ERROR in res: print(DELETE_ERROR+ task_name +" , "+ TASK_NOT_FOUND)
+    else:
+        print(UNKNOWN_COMMAND)

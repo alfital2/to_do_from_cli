@@ -15,7 +15,7 @@ class MyServer(BaseHTTPRequestHandler):
         if route == GET_TASK_ROUTE:
             self.get_task_route(get_req_data)
         elif route == GET_LIST_ROUTE:
-            self.get_list_of_all_tasks()
+            self.get_list_of_all_tasks(get_req_data)
 
     def do_POST(self):
         route = self.get_route(self.path)  # TO-DO make function
@@ -31,19 +31,25 @@ class MyServer(BaseHTTPRequestHandler):
     def delete_task(self):
         content_length = int(self.headers['Content-Length'])
         post_data = (self.rfile.read(content_length)).decode("utf-8")
-        delete_task_from_df(post_data)
-        res = {TASK_STATUS: TASK_DELETED}
+        if not locate_task(post_data):
+            res = {ERROR: TASK_NOT_FOUND}
+        else:
+            delete_task_from_df(post_data)
+            res = {TASK_STATUS: TASK_DELETED}
         self._set_response(json.dumps(res), STATUS_SUCCESS)
 
     def update_task_state(self):
         content_length = int(self.headers['Content-Length'])
         post_data = json.loads((self.rfile.read(content_length)).decode("utf-8"))
-        if task_state_already_set(post_data[TASK_NAME],post_data[TASK_STATUS]):
-            res = {TASK_STATUS: TASK_ALREADY_IN_STATE}
-            self._set_response(json.dumps(res), STATUS_SUCCESS)
+        print(post_data)
+        if not locate_task(post_data[TASK_NAME]):
+            res = {ERROR: TASK_NOT_FOUND}
+        elif task_state_already_set(post_data[TASK_NAME], post_data[TASK_STATUS]):
+            state = TASK_COMPLETED if post_data[TASK_STATUS] == COMPLETE_TASK else TASK_ACTIVE
+            res = {TASK_STATUS: TASK_ALREADY_IN_STATE + ":" + state}
         else:
-            set_task_new_state(post_data[TASK_NAME])
-            self._set_response(json.dumps({TASK_STATUS:TASK_CHANGE_STATE}), STATUS_SUCCESS)
+            res = {TASK_STATUS: set_task_new_state(post_data[TASK_NAME])}
+        self._set_response(json.dumps(res), STATUS_SUCCESS)
 
     def _set_response(self, json_str, code):
         self.send_response(code)
@@ -60,21 +66,29 @@ class MyServer(BaseHTTPRequestHandler):
             res = {TASK_STATUS: TASK_NOT_FOUND}
             self._set_response(json.dumps(res), STATUS_SUCCESS)
 
-    def get_list_of_all_tasks(self):
-        res = get_list_of_tasks()
-        self._set_response(json.dumps(res), STATUS_SUCCESS)
+    def get_list_of_all_tasks(self, function):
+        res = get_list_of_tasks(function['function'][0])
+        self._set_response(json.dumps({"out": res}), STATUS_SUCCESS)
 
     def add_new_task(self):
         content_length = int(self.headers['Content-Length'])
         post_data = (self.rfile.read(content_length)).decode("utf-8")
-        add_new_task({TASK_NAME: post_data, TASK_COMPLETED: False})
-        res = {SUCCESS: TASK_ADDED}
+        if locate_task(post_data):
+            res = {ERROR: TASK_EXIST}
+        else:
+            add_new_task({TASK_NAME: post_data, TASK_COMPLETED: False})
+            res = {SUCCESS: TASK_ADDED}
         self._set_response(json.dumps(res), STATUS_SUCCESS)
 
     def update_task(self):
         content_length = int(self.headers['Content-Length'])
         post_data = json.loads((self.rfile.read(content_length)).decode("utf-8"))
-        res = update_task(post_data[OLD_TASK], post_data[UPDATED_TASK])
+        if not locate_task(post_data[OLD_TASK]):
+            res = {ERROR: TASK_NOT_FOUND}
+        elif task_is_completed(post_data[OLD_TASK]):
+            res = {TASK_STATUS: TASK_ALREADY_IN_STATE + ":" + TASK_COMPLETED}
+        else:
+            res = {SUCCESS: update_task(post_data[OLD_TASK], post_data[UPDATED_TASK])}
         self._set_response(json.dumps(res), STATUS_SUCCESS)
 
 
