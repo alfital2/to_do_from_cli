@@ -79,7 +79,6 @@ def generate_task_table(tasks_list, feature):
         return msg
     else:
         tasks = build_table_of_tasks(tasks_list, feature)
+        print(tasks)
         return tasks
 
-
-get_list_of_tasks(LIST_TASKS)
